@@ -259,7 +259,7 @@ Out of scope:
 
 ## Roadmap
 
-Phase 2+ items are roadmap only and are not implemented in Phase 1:
+Remaining roadmap items beyond Phase 2.1:
 
 - additional IEC 104-inspired protocol abuse scenarios
 - telemetry replay and timestamp tampering scenarios
