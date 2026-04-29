@@ -1,1 +1,1 @@
-{"rtu_connected":true,"telemetry":{"voltage_kv":20.18,"current_a":1.29,"load_mw":0.02,"frequency_hz":50.018,"timestamp":"2026-04-29T15:26:05.050688Z"},"breaker":{"asset_id":"feeder-01-main-breaker","state":"OPEN"},"alarms":[],"detections":[],"last_update":"2026-04-29T15:26:05.051954Z"}
+{"rtu_connected":true,"telemetry":{"voltage_kv":20.02,"current_a":0.02,"load_mw":0.03,"frequency_hz":49.998,"timestamp":"2026-04-29T16:29:45.599978Z"},"breaker":{"asset_id":"feeder-01-main-breaker","state":"OPEN"},"alarms":[],"detections":[],"last_update":"2026-04-29T16:29:45.601028Z"}

@@ -20,6 +20,10 @@ This is an independent, software-only lab built to explore electric utility OT s
 
 ![Spoofed direct RTU attack detection](screenshots/hmi-spoofed-attack-detection.png)
 
+### Phase 2.1 GENERAL_INTERROGATION Reconnaissance Detection
+
+![Phase 2.1 GENERAL_INTERROGATION reconnaissance detection](screenshots/hmi-phase2-general-interrogation-detection.png)
+
 ## What This Demonstrates
 
 | Area | Demonstrated Capability |
@@ -62,6 +66,12 @@ Run the default spoofed direct RTU attack:
 
 ```bash
 docker compose run --rm attacker python attacks/unauthorized_breaker_open.py
+```
+
+Run the Phase 2.1 GENERAL_INTERROGATION reconnaissance scenario:
+
+```bash
+docker compose run --rm attacker python attacks/general_interrogation_abuse.py --count 20 --delay 0.1
 ```
 
 ## Security Finding Modeled
@@ -127,12 +137,27 @@ Expected attack result:
 
 The detection is not based on `source.role=ATTACKER`. The default attacker claims SCADA identity, and detection still fires because client-provided identity is treated as untrusted metadata.
 
+## GENERAL_INTERROGATION Abuse Demo
+
+Phase 2.1 adds one IEC 104-inspired reconnaissance scenario. A direct field-protocol client repeatedly sends `GENERAL_INTERROGATION` to enumerate synthetic RTU process state and point metadata.
+
+The breaker state does not change. The HMI continues to show feeder state and telemetry, while the RTU and SCADA detections identify excessive or direct field-interface interrogation behavior.
+
+The Phase 2.1 screenshot shows the breaker remaining `CLOSED` while the HMI displays GENERAL_INTERROGATION reconnaissance detections, distinguishing reconnaissance/enumeration from breaker-control impact.
+
+Example:
+
+```bash
+docker compose run --rm attacker python attacks/general_interrogation_abuse.py --count 20 --delay 0.1
+```
+
 ## Validated Evidence
 
 | Evidence Set | Purpose | Validation Command |
 | --- | --- | --- |
 | `evidence/phase1-normal-scada-workflow/` | Proves normal HMI/SCADA select-before-operate does not trigger critical workflow-bypass detections | `make validate-normal-evidence` |
 | `evidence/phase1-spoofed-direct-rtu-attack/` | Proves spoofed direct RTU control is detected despite claiming SCADA identity | `make validate-attack-evidence` |
+| `evidence/phase2-general-interrogation-abuse/` | Proves repeated direct GENERAL_INTERROGATION is detected as reconnaissance/enumeration without changing breaker state | `make validate-general-interrogation-evidence` |
 
 Generate and validate normal SCADA workflow evidence:
 
@@ -146,6 +171,13 @@ Generate and validate spoofed direct RTU attack evidence:
 ```bash
 make evidence-attack
 make validate-attack-evidence
+```
+
+Generate and validate GENERAL_INTERROGATION abuse evidence:
+
+```bash
+make evidence-general-interrogation
+make validate-general-interrogation-evidence
 ```
 
 Curated evidence is stored under `evidence/`. Runtime logs under `logs/` are temporary and should be reset before validation.
@@ -168,6 +200,7 @@ make attack
 make clean-logs
 make evidence-normal
 make evidence-attack
+make evidence-general-interrogation
 make test
 ```
 
@@ -189,9 +222,9 @@ See [docs/electric-utility-context.md](docs/electric-utility-context.md) and [do
 
 This project runs entirely inside a local Docker lab using synthetic services and telemetry. Do not use it against systems you do not own or have explicit authorization to test.
 
-## Phase 1 Scope
+## Implemented Scope
 
-Included:
+Phase 1 includes:
 
 - RTU simulator
 - SCADA Master
@@ -203,7 +236,14 @@ Included:
 - curated evidence generation and validation
 - focused tests
 
-Out of scope for Phase 1:
+Phase 2.1 adds:
+
+- `GENERAL_INTERROGATION` abuse attacker
+- synthetic RTU point-summary response
+- excessive/direct field-interface interrogation detections
+- curated evidence generation and validation
+
+Out of scope:
 
 - IEC 61850, GOOSE, MMS
 - AMI
@@ -221,7 +261,7 @@ Out of scope for Phase 1:
 
 Phase 2+ items are roadmap only and are not implemented in Phase 1:
 
-- IEC 104-inspired protocol abuse expansion
+- additional IEC 104-inspired protocol abuse scenarios
 - telemetry replay and timestamp tampering scenarios
 - physics-aware validation with a feeder model
 - IEC 61850 digital substation simulation

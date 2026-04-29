@@ -1,6 +1,6 @@
-# Phase 1 Architecture
+# Current Architecture
 
-Phase 1 is a compact software-only electric utility OT cyber range. It models the control path, field-device state, HMI visibility, direct field-protocol abuse, and detection evidence for a small simulated distribution feeder.
+The current implementation is a compact software-only electric utility OT cyber range. It models the control path, field-device state, HMI visibility, direct field-protocol abuse, reconnaissance-style interrogation, and detection evidence for a small simulated distribution feeder.
 
 It is intentionally simplified and runs entirely inside a local Docker lab with synthetic services and telemetry. It is not a standards-compliant IEC 60870-5-104 implementation.
 
@@ -21,7 +21,7 @@ The HMI never talks directly to the RTU. The normal authorized path for breaker 
 | `hmi` | Host `http://localhost:18081` | Serves the browser HMI and proxies `/api/*` calls to the SCADA Master. |
 | `scada-master` | Docker-internal HTTP `8000` | Polls RTU telemetry, performs select-before-operate, stores command correlation records, exposes status/events to HMI. |
 | `rtu-simulator` | Docker-internal TCP `2404` | Owns authoritative breaker state, generates telemetry, records RTU events, detects invalid field-control workflow. |
-| `attacker` | Run-on-demand container | Sends a direct TCP JSON-lines breaker command to the RTU. |
+| `attacker` | Run-on-demand container | Sends direct TCP JSON-lines attack traffic to the RTU for the implemented abuse scenarios. |
 
 ## Field Protocol
 
@@ -92,6 +92,19 @@ HMI shows breaker OPEN, alarm, and detections
 
 The detection is based on workflow evidence, select-token validation, SCADA correlation, sequence behavior, and peer hints. It does not depend on the attacker honestly identifying as `ATTACKER`.
 
+## GENERAL_INTERROGATION Abuse Workflow
+
+```text
+Attacker connects directly to RTU
+Attacker repeatedly sends GENERAL_INTERROGATION
+RTU returns synthetic breaker, telemetry, and point-summary data
+RTU detects excessive/direct field-interface interrogation
+SCADA observes RTU interrogation events and surfaces detections
+HMI shows reconnaissance/enumeration detections without breaker state change
+```
+
+This scenario models field-protocol reconnaissance/enumeration. It does not operate the breaker and does not add telemetry replay or protocol desynchronization behavior.
+
 ## Logs And Evidence
 
 Runtime logs are written to:
@@ -104,3 +117,4 @@ Curated validation evidence is generated under:
 
 - `evidence/phase1-normal-scada-workflow/`
 - `evidence/phase1-spoofed-direct-rtu-attack/`
+- `evidence/phase2-general-interrogation-abuse/`

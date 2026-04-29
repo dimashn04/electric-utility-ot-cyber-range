@@ -97,3 +97,67 @@ The lab models the vulnerable behavior for demonstration. A hardened design woul
 - replay protection
 - expected sequence behavior
 - an authorized network path
+
+## Scenario: GENERAL_INTERROGATION Abuse
+
+Objective: show that a direct field-protocol client can aggressively query the RTU for synthetic process state and point metadata.
+
+This is a reconnaissance/enumeration scenario. It should not change breaker state.
+
+### Preconditions
+
+- Lab is running with `docker compose up --build`.
+- HMI is available at `http://localhost:18081`.
+- Breaker is `CLOSED`.
+
+### Attack Command
+
+```bash
+docker compose run --rm attacker python attacks/general_interrogation_abuse.py --count 20 --delay 0.1
+```
+
+Default mode is `spoof-scada`.
+
+### Expected Behavior
+
+- Attacker connects directly to `rtu-simulator:2404`.
+- Attacker repeatedly sends `GENERAL_INTERROGATION`.
+- RTU returns synthetic breaker state, telemetry, point summary, address-style metadata, latest event index, and timestamps.
+- RTU and SCADA detections identify excessive or direct field-interface interrogation.
+
+### Expected HMI Result
+
+- Breaker state remains `CLOSED`.
+- Feeder telemetry remains normal.
+- Alarm banner activates for GENERAL_INTERROGATION reconnaissance.
+- Recent RTU events show repeated `GENERAL_INTERROGATION` activity.
+- SCADA detections show excessive or direct field-interface interrogation behavior.
+
+### Expected Evidence
+
+Use the evidence target for repeatable validation:
+
+```bash
+make evidence-general-interrogation
+make validate-general-interrogation-evidence
+```
+
+Evidence is saved under:
+
+```text
+evidence/phase2-general-interrogation-abuse/
+```
+
+### Detection Rules Expected
+
+RTU-side:
+
+- `EXCESSIVE_GENERAL_INTERROGATION`
+- `DIRECT_FIELD_INTERFACE_INTERROGATION`
+- `CLAIMED_SOURCE_MISMATCH`
+- `INTERROGATION_RATE_ANOMALY`
+
+SCADA-side:
+
+- `RTU_INTERROGATION_WITHOUT_LOCAL_POLLING_CONTEXT`
+- propagated RTU interrogation detections

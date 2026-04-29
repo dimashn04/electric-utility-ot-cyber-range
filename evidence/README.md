@@ -64,6 +64,29 @@ The evidence is therefore based on behavior and workflow validation:
 - direct field-interface control
 - unexpected breaker state after polling
 
+## GENERAL_INTERROGATION Abuse Evidence
+
+Generate and validate:
+
+```bash
+make evidence-general-interrogation
+make validate-general-interrogation-evidence
+```
+
+Saved under:
+
+```text
+evidence/phase2-general-interrogation-abuse/
+```
+
+This evidence shows:
+
+- repeated direct `GENERAL_INTERROGATION` requests to the RTU
+- synthetic point summary and telemetry returned by the RTU
+- breaker state remains unchanged
+- detections fire for excessive/direct field-interface interrogation
+- default detection does not depend on `source.role=ATTACKER`
+
 ## Files
 
 Normal workflow evidence includes:
@@ -77,6 +100,15 @@ Normal workflow evidence includes:
 - `detections.jsonl`
 
 Attack evidence includes:
+
+- `attacker-output.txt`
+- `status.json`
+- `events.json`
+- `rtu.jsonl`
+- `scada.jsonl`
+- `detections.jsonl`
+
+GENERAL_INTERROGATION evidence includes:
 
 - `attacker-output.txt`
 - `status.json`

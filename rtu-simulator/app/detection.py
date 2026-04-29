@@ -90,3 +90,59 @@ def detect_execute_workflow(
             )
         )
     return detections
+
+
+def detect_general_interrogation(
+    message: dict[str, Any],
+    claims_authorized_scada: bool,
+    peer_has_select_history: bool,
+    recent_peer_count: int,
+    recent_claim_count: int,
+) -> list[dict[str, Any]]:
+    detections: list[dict[str, Any]] = []
+    if recent_peer_count >= 5:
+        detections.append(
+            detection(
+                "EXCESSIVE_GENERAL_INTERROGATION",
+                "Multiple GENERAL_INTERROGATION requests observed from the same network peer in a short window",
+            )
+        )
+        detections.append(
+            detection(
+                "INTERROGATION_RATE_ANOMALY",
+                "GENERAL_INTERROGATION request rate exceeded the Phase 2.1 lab threshold",
+            )
+        )
+
+    if recent_claim_count >= 5:
+        detections.append(
+            detection(
+                "GENERAL_INTERROGATION_BURST",
+                "Burst of GENERAL_INTERROGATION requests observed for the same claimed source identity",
+            )
+        )
+
+    if claims_authorized_scada and not peer_has_select_history:
+        detections.append(
+            detection(
+                "CLAIMED_SOURCE_MISMATCH",
+                f"GENERAL_INTERROGATION claims {AUTHORIZED_SCADA_SOURCE_ID} but peer has no recent SCADA workflow evidence",
+            )
+        )
+        detections.append(
+            detection(
+                "DIRECT_FIELD_INTERFACE_INTERROGATION",
+                "GENERAL_INTERROGATION arrived directly at the RTU field interface without SCADA workflow context",
+            )
+        )
+
+    source = message.get("source") or {}
+    if source.get("id") != AUTHORIZED_SCADA_SOURCE_ID:
+        detections.append(
+            detection(
+                "UNAUTHORIZED_INTERROGATION_SOURCE",
+                "GENERAL_INTERROGATION came from a claimed source outside the normal SCADA identity",
+            )
+        )
+
+    return detections

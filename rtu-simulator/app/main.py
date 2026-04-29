@@ -3,7 +3,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .config import AUTHORIZED_SCADA_SOURCE_ID, LOG_DIR, RTU_HOST, RTU_PORT, RTU_VULNERABLE_MODE
-from .detection import detect_execute_workflow, detect_sequence_anomaly, detect_timestamp_anomaly
+from .detection import (
+    detect_execute_workflow,
+    detect_general_interrogation,
+    detect_sequence_anomaly,
+    detect_timestamp_anomaly,
+)
 from .logging_utils import JsonlLogger
 from .protocol import BREAKER_ID, PROTOCOL_NAME, decode_message, encode_message, utc_now
 from .state import RtuState, default_target
@@ -68,6 +73,67 @@ def handle_read_telemetry(message: dict[str, Any]) -> dict[str, Any]:
             "breaker": {"asset_id": BREAKER_ID, "state": state.breaker_state},
             "telemetry": state.telemetry(),
             "alarm": {"active": state.alarm_active, "message": state.alarm_message},
+        },
+    )
+
+
+def handle_general_interrogation(message: dict[str, Any], peer: str, peer_info: dict[str, Any]) -> dict[str, Any]:
+    source = message.get("source") or {}
+    claim_key = f"{source.get('id', 'unknown')}:{source.get('role', 'unknown')}"
+    peer_count, claim_count = state.record_general_interrogation(peer, claim_key)
+    claims_authorized_scada = source.get("id") == AUTHORIZED_SCADA_SOURCE_ID
+    detections = detect_general_interrogation(
+        message,
+        claims_authorized_scada,
+        state.peer_has_select_history(peer),
+        peer_count,
+        claim_count,
+    )
+    if detections:
+        state.alarm_active = True
+        state.alarm_message = "Suspicious GENERAL_INTERROGATION reconnaissance detected"
+
+    telemetry = state.telemetry()
+    event = state.add_event(
+        {
+            "event_type": "general_interrogation",
+            "severity": "warning" if detections else "info",
+            "message_type": "GENERAL_INTERROGATION",
+            "sequence": message.get("sequence"),
+            "message_timestamp": message.get("timestamp"),
+            "rtu_receive_timestamp": utc_now(),
+            "correlation_id": message.get("correlation_id"),
+            "session_id": message.get("session_id"),
+            "command_origin": message.get("command_origin"),
+            "claimed_source": source,
+            "network_peer": peer_info,
+            "target": message.get("target"),
+            "details": {
+                "peer_window_count": peer_count,
+                "claim_window_count": claim_count,
+                "point_count": len(state.point_summary()),
+                "breaker_state": state.breaker_state,
+            },
+            "detections": detections,
+        }
+    )
+    rtu_logger.write(event)
+    log_detection_events(event)
+    return response(
+        "TELEMETRY_RESPONSE",
+        message,
+        {
+            "interrogation": {
+                "status": "COMPLETE",
+                "latest_event_index": event["event_index"],
+                "timestamp": utc_now(),
+            },
+            "breaker": {"asset_id": BREAKER_ID, "state": state.breaker_state},
+            "telemetry": telemetry,
+            "points": state.point_summary(),
+            "addressing": message.get("addressing"),
+            "alarm": {"active": state.alarm_active, "message": state.alarm_message},
+            "detections": detections,
         },
     )
 
@@ -204,8 +270,10 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             )
 
         message_type = message.get("message_type")
-        if message_type in {"READ_TELEMETRY", "GENERAL_INTERROGATION", "HEARTBEAT"}:
+        if message_type in {"READ_TELEMETRY", "HEARTBEAT"}:
             reply = handle_read_telemetry(message)
+        elif message_type == "GENERAL_INTERROGATION":
+            reply = handle_general_interrogation(message, peer, peer_info)
         elif message_type == "SELECT_BREAKER":
             reply = handle_select_breaker(message, peer)
         elif message_type == "EXECUTE_BREAKER":

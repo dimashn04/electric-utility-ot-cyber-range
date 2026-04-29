@@ -1,6 +1,6 @@
 # Roadmap
 
-The roadmap describes possible future phases. These features are not implemented in Phase 1.
+The roadmap separates implemented milestones from possible future phases.
 
 ## Phase 1: IEC 104-Inspired SCADA Lab
 
@@ -15,11 +15,19 @@ Status: implemented.
 - normal workflow validation
 - spoofed direct RTU attack validation
 
-## Phase 2: IEC 104-Inspired Protocol Abuse Expansion
+## Phase 2.1: GENERAL_INTERROGATION Abuse
+
+Status: implemented.
+
+- direct RTU `GENERAL_INTERROGATION` attacker script
+- synthetic point-summary and telemetry response
+- excessive/direct field-interface interrogation detections
+- curated evidence generation and validation
+
+## Phase 2.x: IEC 104-Inspired Protocol Abuse Expansion
 
 Potential additions:
 
-- general interrogation abuse
 - telemetry replay
 - timestamp tampering
 - sequence desynchronization
