@@ -1,0 +1,29 @@
+sequenceDiagram
+  participant B as Browser HMI
+  participant H as HMI Backend
+  participant S as SCADA Master
+  participant R as RTU Simulator
+  participant A as Attacker
+
+  B->>H: GET /api/status
+  H->>S: GET /api/status
+  S->>R: READ_TELEMETRY
+  R-->>S: TELEMETRY_RESPONSE
+  S-->>H: status JSON
+  H-->>B: status JSON
+
+  B->>H: POST /api/commands/breaker/open
+  H->>S: POST /api/commands/breaker/open
+  S->>S: create correlation_id
+  S->>R: SELECT_BREAKER
+  R-->>S: COMMAND_RESPONSE select_token
+  S->>R: EXECUTE_BREAKER with select_token + correlation_id
+  R-->>S: COMMAND_RESPONSE accepted, detections=[]
+
+  A->>R: EXECUTE_BREAKER OPEN claiming scada-master / SCADA_MASTER
+  Note over R: Missing valid select_token and SCADA workflow correlation
+  R-->>A: COMMAND_RESPONSE accepted in vulnerable mode
+  S->>R: EVENT_LOG_REQUEST
+  R-->>S: breaker event with RTU-side detections
+  S->>S: correlate event with local command records
+  S-->>B: HMI shows breaker OPEN, alarm, and SCADA detections

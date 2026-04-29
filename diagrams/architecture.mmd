@@ -1,0 +1,9 @@
+flowchart LR
+  Browser[Browser HMI<br/>localhost:18081] -->|HTTP /api/*| HMI[HMI Backend<br/>FastAPI proxy]
+  HMI -->|Docker-internal HTTP JSON| SCADA[SCADA Master<br/>polling + command correlation]
+  SCADA -->|TCP JSON-lines<br/>IEC104-inspired field protocol| RTU[RTU Simulator<br/>TCP 2404]
+  Attacker[Attacker Container<br/>spoof-scada mode] -->|Direct TCP JSON-lines<br/>bypasses HMI/SCADA workflow| RTU
+  RTU --> State[(Authoritative<br/>Breaker + Telemetry State)]
+  RTU --> Logs[(Runtime JSONL Logs)]
+  SCADA --> Logs
+  Logs --> Evidence[(Curated Evidence<br/>normal + attack validation)]

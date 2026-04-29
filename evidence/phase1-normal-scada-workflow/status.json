@@ -1,0 +1,1 @@
+{"rtu_connected":true,"telemetry":{"voltage_kv":20.0,"current_a":0.56,"load_mw":0.03,"frequency_hz":50.011,"timestamp":"2026-04-29T15:06:02.035908Z"},"breaker":{"asset_id":"feeder-01-main-breaker","state":"OPEN"},"alarms":[],"detections":[],"last_update":"2026-04-29T15:06:02.037416Z"}

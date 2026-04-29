@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+logs/*.jsonl
+logs/*.log
+!.gitkeep
+!.gitignore
+*.egg-info/

@@ -1,0 +1,57 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.23kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 264B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.11-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 178B done
+#5 DONE 0.1s
+
+#6 [1/6] FROM docker.io/library/python:3.11-slim@sha256:0b23cfb7425d065008b778022a17b1551c82f8b4866ee5a7a200084b7e2eafbf
+#6 resolve docker.io/library/python:3.11-slim@sha256:0b23cfb7425d065008b778022a17b1551c82f8b4866ee5a7a200084b7e2eafbf 0.1s done
+#6 DONE 0.1s
+
+#7 [4/6] RUN pip install --no-cache-dir -r requirements.txt
+#7 CACHED
+
+#8 [5/6] COPY app ./app
+#8 CACHED
+
+#9 [2/6] WORKDIR /app
+#9 CACHED
+
+#10 [3/6] COPY requirements.txt .
+#10 CACHED
+
+#11 [6/6] COPY attacks ./attacks
+#11 CACHED
+
+#12 exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:62c5f03916112643e89a91b2a48e45d09523c1f926ce929c018ce3865b459b4c 0.0s done
+#12 exporting config sha256:2a31d9729640f2b2b5c87631972c95695d5daf536fc534cd0573f073ab9b4899 0.0s done
+#12 exporting attestation manifest sha256:b7f61778bf31d780a6a31481ee841f370c038554911e4e1cc45d09ff43bd1cb0
+#12 exporting attestation manifest sha256:b7f61778bf31d780a6a31481ee841f370c038554911e4e1cc45d09ff43bd1cb0 0.1s done
+#12 exporting manifest list sha256:d65ff0ec662a9cb9e709c8c9a7628b04bd94b831513932060288e451ba1914d9 0.1s done
+#12 naming to docker.io/library/electric-utility-ot-cyber-range-attacker:latest 0.0s done
+#12 unpacking to docker.io/library/electric-utility-ot-cyber-range-attacker:latest
+#12 unpacking to docker.io/library/electric-utility-ot-cyber-range-attacker:latest 0.0s done
+#12 DONE 0.4s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+Sent unauthorized EXECUTE_BREAKER OPEN
+Mode: spoof-scada
+Claimed source: {'id': 'scada-master', 'role': 'SCADA_MASTER'}
+Correlation ID: cmd-spoofed-f2f50507
+RTU response: {'protocol': 'IEC104_INSPIRED_LAB', 'message_type': 'COMMAND_RESPONSE', 'sequence': 1, 'timestamp': '2026-04-29T15:06:20.234636Z', 'correlation_id': 'cmd-spoofed-f2f50507', 'source': {'id': 'rtu-simulator', 'role': 'RTU'}, 'target': {'asset_type': 'BREAKER', 'asset_id': 'feeder-01-main-breaker'}, 'cause_of_transmission': 'RESPONSE', 'payload': {'status': 'ACCEPTED', 'breaker': {'asset_id': 'feeder-01-main-breaker', 'state': 'OPEN'}, 'detections': [{'rule_id': 'COMMAND_WITHOUT_VALID_SELECT', 'matched': True, 'reason': 'EXECUTE_BREAKER did not include a valid select-before-operate token'}, {'rule_id': 'DIRECT_FIELD_INTERFACE_CONTROL', 'matched': True, 'reason': 'Breaker command arrived without normal select-before-operate workflow evidence'}, {'rule_id': 'CLAIMED_SOURCE_MISMATCH', 'matched': True, 'reason': 'Message claims scada-master but peer has no recent select workflow'}, {'rule_id': 'SEQUENCE_ANOMALY', 'matched': True, 'reason': 'Sequence did not increase for claimed source identity'}]}}

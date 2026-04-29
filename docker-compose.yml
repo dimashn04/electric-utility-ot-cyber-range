@@ -1,0 +1,46 @@
+services:
+  rtu-simulator:
+    build: ./rtu-simulator
+    environment:
+      RTU_HOST: 0.0.0.0
+      RTU_PORT: "2404"
+      RTU_VULNERABLE_MODE: "true"
+      LOG_DIR: /logs
+    volumes:
+      - ./logs:/logs
+
+  scada-master:
+    build: ./scada-master
+    environment:
+      SCADA_HOST: 0.0.0.0
+      SCADA_PORT: "8000"
+      RTU_HOST: rtu-simulator
+      RTU_PORT: "2404"
+      LOG_DIR: /logs
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      - rtu-simulator
+    ports:
+      - "18080:8000"
+
+  hmi:
+    build: ./hmi
+    environment:
+      HMI_HOST: 0.0.0.0
+      HMI_PORT: "8080"
+      SCADA_BASE_URL: http://scada-master:8000
+    depends_on:
+      - scada-master
+    ports:
+      - "18081:8080"
+
+  attacker:
+    build: ./attacker
+    environment:
+      RTU_HOST: rtu-simulator
+      RTU_PORT: "2404"
+    depends_on:
+      - rtu-simulator
+    profiles:
+      - tools
