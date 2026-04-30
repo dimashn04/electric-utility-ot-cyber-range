@@ -55,11 +55,12 @@ async function refreshStatus() {
     els.alarmBanner.classList.toggle("alarm", alarms.length > 0);
     if (alarms.length > 0) {
       els.alarmText.textContent = `Alarm state: ${alarms[0].message}`;
-      if (els.commandStatus.textContent === "Command status: idle") {
-        els.commandStatus.textContent = `Alarm: ${alarms[0].message}`;
-      }
+      els.commandStatus.textContent = `Alarm: ${alarms[0].message}`;
     } else {
       els.alarmText.textContent = "Alarm state: normal workflow";
+      if (!els.commandStatus.textContent.startsWith("Command status: sending")) {
+        els.commandStatus.textContent = "Alarm: normal workflow";
+      }
     }
   } catch (err) {
     els.rtuStatus.textContent = "RTU: API ERROR";

@@ -1,0 +1,8 @@
+GENERAL_INTERROGATION abuse completed
+Mode: spoof-scada
+Requests sent: 20
+Claimed source: {'id': 'scada-master', 'role': 'SCADA_MASTER'}
+Sample telemetry: {'voltage_kv': 20.19, 'current_a': 180.87, 'load_mw': 6.05, 'frequency_hz': 49.987, 'timestamp': '2026-04-29T16:30:20.566657Z'}
+Sample point count: 5
+Sample points: ['feeder_01_main_breaker_state', 'feeder_01_voltage_kv', 'feeder_01_current_a', 'feeder_01_load_mw', 'feeder_01_frequency_hz']
+Detections returned: ['CLAIMED_SOURCE_MISMATCH', 'DIRECT_FIELD_INTERFACE_INTERROGATION', 'EXCESSIVE_GENERAL_INTERROGATION', 'GENERAL_INTERROGATION_BURST', 'INTERROGATION_RATE_ANOMALY', 'SEQUENCE_ANOMALY']

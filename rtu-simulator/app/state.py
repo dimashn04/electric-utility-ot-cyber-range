@@ -28,6 +28,8 @@ class RtuState:
     expected_sequence_by_peer: dict[str, int] = field(default_factory=dict)
     expected_sequence_by_claim: dict[str, int] = field(default_factory=dict)
     peers_with_select_history: set[str] = field(default_factory=set)
+    interrogation_times_by_peer: dict[str, list[datetime]] = field(default_factory=dict)
+    interrogation_times_by_claim: dict[str, list[datetime]] = field(default_factory=dict)
 
     def telemetry(self) -> dict[str, Any]:
         voltage = 20.0 + random.uniform(-0.25, 0.25)
@@ -107,6 +109,52 @@ class RtuState:
 
     def events_since(self, after_index: int) -> list[dict[str, Any]]:
         return [event for event in self.events if int(event.get("event_index", 0)) > after_index]
+
+    def point_summary(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "name": "feeder_01_main_breaker_state",
+                "type": "single_point",
+                "common_address": 100,
+                "information_object_address": 2001,
+                "value": self.breaker_state,
+            },
+            {
+                "name": "feeder_01_voltage_kv",
+                "type": "measured_value",
+                "common_address": 100,
+                "information_object_address": 2101,
+            },
+            {
+                "name": "feeder_01_current_a",
+                "type": "measured_value",
+                "common_address": 100,
+                "information_object_address": 2102,
+            },
+            {
+                "name": "feeder_01_load_mw",
+                "type": "measured_value",
+                "common_address": 100,
+                "information_object_address": 2103,
+            },
+            {
+                "name": "feeder_01_frequency_hz",
+                "type": "measured_value",
+                "common_address": 100,
+                "information_object_address": 2104,
+            },
+        ]
+
+    def record_general_interrogation(self, peer_key: str, claim_key: str, window_seconds: int = 10) -> tuple[int, int]:
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(seconds=window_seconds)
+        peer_times = [item for item in self.interrogation_times_by_peer.get(peer_key, []) if item >= cutoff]
+        claim_times = [item for item in self.interrogation_times_by_claim.get(claim_key, []) if item >= cutoff]
+        peer_times.append(now)
+        claim_times.append(now)
+        self.interrogation_times_by_peer[peer_key] = peer_times
+        self.interrogation_times_by_claim[claim_key] = claim_times
+        return len(peer_times), len(claim_times)
 
     def expire_tokens(self) -> None:
         now = datetime.now(timezone.utc)

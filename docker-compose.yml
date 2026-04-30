@@ -21,8 +21,6 @@ services:
       - ./logs:/logs
     depends_on:
       - rtu-simulator
-    ports:
-      - "18080:8000"
 
   hmi:
     build: ./hmi

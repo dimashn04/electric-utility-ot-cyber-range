@@ -4,8 +4,9 @@ HMI_URL ?= http://localhost:18081
 LOG_FILES := logs/rtu.jsonl logs/scada.jsonl logs/detections.jsonl
 NORMAL_EVIDENCE_DIR := evidence/phase1-normal-scada-workflow
 ATTACK_EVIDENCE_DIR := evidence/phase1-spoofed-direct-rtu-attack
+GI_EVIDENCE_DIR := evidence/phase2-general-interrogation-abuse
 
-.PHONY: up down build attack test logs clean-logs reset-runtime-logs evidence-normal evidence-attack validate-normal-evidence validate-attack-evidence wait-hmi
+.PHONY: up down build attack test logs clean-logs reset-runtime-logs evidence-normal evidence-attack evidence-general-interrogation validate-normal-evidence validate-attack-evidence validate-general-interrogation-evidence wait-hmi
 
 up:
 	docker compose up --build
@@ -17,6 +18,7 @@ build:
 	docker compose build
 
 attack:
+	docker compose build attacker
 	docker compose run --rm attacker python attacks/unauthorized_breaker_open.py
 
 test:
@@ -65,6 +67,7 @@ evidence-attack: clean-logs
 	sleep 2
 	$(MAKE) reset-runtime-logs
 	mkdir -p "$(ATTACK_EVIDENCE_DIR)"
+	docker compose build attacker
 	docker compose run --rm attacker python attacks/unauthorized_breaker_open.py > "$(ATTACK_EVIDENCE_DIR)/attacker-output.txt"
 	sleep 3
 	curl -fsS "$(HMI_URL)/api/status" > "$(ATTACK_EVIDENCE_DIR)/status.json"
@@ -72,8 +75,26 @@ evidence-attack: clean-logs
 	cp $(LOG_FILES) "$(ATTACK_EVIDENCE_DIR)/"
 	$(MAKE) validate-attack-evidence
 
+evidence-general-interrogation: clean-logs
+	docker compose up -d --build rtu-simulator scada-master hmi
+	$(MAKE) wait-hmi
+	curl -fsS -X POST "$(HMI_URL)/api/commands/breaker/close" > /tmp/electric-utility-ot-cyber-range-gi-precondition-close.json
+	sleep 2
+	$(MAKE) reset-runtime-logs
+	mkdir -p "$(GI_EVIDENCE_DIR)"
+	docker compose build attacker
+	docker compose run --rm attacker python attacks/general_interrogation_abuse.py --count 20 --delay 0.1 > "$(GI_EVIDENCE_DIR)/attacker-output.txt"
+	sleep 3
+	curl -fsS "$(HMI_URL)/api/status" > "$(GI_EVIDENCE_DIR)/status.json"
+	curl -fsS "$(HMI_URL)/api/events" > "$(GI_EVIDENCE_DIR)/events.json"
+	cp $(LOG_FILES) "$(GI_EVIDENCE_DIR)/"
+	$(MAKE) validate-general-interrogation-evidence
+
 validate-normal-evidence:
 	python scripts/validate_normal_evidence.py "$(NORMAL_EVIDENCE_DIR)"
 
 validate-attack-evidence:
 	python scripts/validate_attack_evidence.py "$(ATTACK_EVIDENCE_DIR)"
+
+validate-general-interrogation-evidence:
+	python scripts/validate_general_interrogation_evidence.py "$(GI_EVIDENCE_DIR)"

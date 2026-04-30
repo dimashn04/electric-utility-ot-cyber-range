@@ -12,6 +12,26 @@ def detection(rule_id: str, reason: str, event: dict[str, Any] | None = None) ->
 
 
 def detect_event_correlation(event: dict[str, Any], command_records: dict[str, Any]) -> list[dict[str, Any]]:
+    if event.get("event_type") == "general_interrogation":
+        detections = [
+            detection(
+                "RTU_INTERROGATION_WITHOUT_LOCAL_POLLING_CONTEXT",
+                "RTU reported GENERAL_INTERROGATION activity outside the SCADA Master's normal telemetry polling context",
+                event,
+            )
+        ]
+        for rtu_detection in event.get("detections", []):
+            detections.append(
+                {
+                    "rule_id": rtu_detection.get("rule_id"),
+                    "matched": True,
+                    "reason": rtu_detection.get("reason"),
+                    "event_index": event.get("event_index"),
+                    "correlation_id": event.get("correlation_id"),
+                }
+            )
+        return detections
+
     if event.get("event_type") != "breaker_command":
         return []
 

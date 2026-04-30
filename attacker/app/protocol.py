@@ -58,3 +58,33 @@ def attack_execute_breaker(mode: str, sequence: int = 1) -> dict[str, Any]:
         "cause_of_transmission": "ACTIVATION",
         "payload": payload,
     }
+
+
+def attack_general_interrogation(mode: str, sequence: int = 1) -> dict[str, Any]:
+    if mode == "honest-attacker":
+        source = {"id": "attacker-node", "role": "ATTACKER"}
+        session_id = None
+        command_origin = None
+    else:
+        source = {"id": "scada-master", "role": "SCADA_MASTER"}
+        session_id = "operator-session-spoofed"
+        command_origin = "SCADA_POLL"
+
+    return {
+        "protocol": PROTOCOL_NAME,
+        "message_type": "GENERAL_INTERROGATION",
+        "sequence": sequence,
+        "timestamp": utc_now(),
+        "correlation_id": f"gi-{uuid.uuid4().hex[:8]}",
+        "session_id": session_id,
+        "command_origin": command_origin,
+        "source": source,
+        "target": {"asset_type": "RTU", "asset_id": "rtu-simulator-01"},
+        "addressing": {
+            "originator_address": 1,
+            "common_address": 100,
+            "information_object_address": 0,
+        },
+        "cause_of_transmission": "INTERROGATED_BY_GENERAL_INTERROGATION",
+        "payload": {"qualifier": "station"},
+    }
